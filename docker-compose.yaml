@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_DB=countries
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5432:5432
+
+  server:
+      build: .
+      command: python app/main.py
+      volumes:
+        - .:/app
+      ports:
+        - 8080:8080
+      environment:
+        - WEB_SOURCE=wiki
+      depends_on:
+        - postgres
+
+  get_data:
+      build: .
+      command: curl server:8080/get_data
+      depends_on:
+        - server
+
+  print_data:
+      build: .
+      command: curl server:8080/print_data
+      depends_on:
+        - server
