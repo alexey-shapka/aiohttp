@@ -1,3 +1,5 @@
+import os
+
 import asyncpg
 
 
@@ -5,7 +7,10 @@ class Database:
 
     @classmethod
     async def _action(cls, method, query):
-        db = await asyncpg.create_pool(database="countries", user="user", password="password", host="postgres")
+        db = await asyncpg.create_pool(
+            database=os.getenv("DB_NAME"), user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"), host="postgres"
+        )
         async with db.acquire() as conn:
             data =  await getattr(conn, method)(query)
         await db.close()
