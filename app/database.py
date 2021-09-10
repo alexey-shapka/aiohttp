@@ -1,6 +1,6 @@
-import os
-
 import asyncpg
+
+from config import POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
 
 
 class Database:
@@ -8,8 +8,7 @@ class Database:
     @classmethod
     async def _action(cls, method, query):
         db = await asyncpg.create_pool(
-            database=os.getenv("DB_NAME"), user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"), host="postgres"
+            database=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, host="postgres"
         )
         async with db.acquire() as conn:
             data =  await getattr(conn, method)(query)

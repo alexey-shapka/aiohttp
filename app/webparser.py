@@ -1,8 +1,9 @@
 import re
-import os
 
 import aiohttp
 from bs4 import BeautifulSoup
+
+from config import WEB_SOURCE
 
 
 class WebParser:
@@ -20,11 +21,10 @@ class WebParser:
 
     @classmethod
     async def parse_data(cls):
-        source = os.getenv("WEB_SOURCE")
-        parser = BeautifulSoup(await cls.fetch(cls.urls[source]), features="html.parser")
-        if source == "wiki":
+        parser = BeautifulSoup(await cls.fetch(cls.urls[WEB_SOURCE]), features="html.parser")
+        if WEB_SOURCE == "wiki":
             return await cls.parse_wiki_data(parser)
-        elif source == "stats":
+        elif WEB_SOURCE == "stats":
             return await cls.parse_stats_data(parser)
 
     @classmethod
