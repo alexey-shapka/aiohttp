@@ -18,7 +18,7 @@ class Database:
     @classmethod
     async def execute(cls, query):
         await cls._action("execute", query)
-    
+
     @classmethod
     async def fetch(cls, query):
         return await cls._action("fetch", query)
@@ -29,44 +29,40 @@ class Database:
         await cls.execute(
             "INSERT INTO countries (country, region, population, world_percent, date, source, notes) VALUES %s;" % vals
         )
-    
+
     @classmethod
     async def get_countries(cls):
         query = """
-            SELECT t1.region,
-                t1.rp AS region_population,
-                t2.maxc AS max_country,
-                t2.maxp AS max_population,
-                t2.minc AS min_country,
-                t2.minp AS min_population
+            SELECT region,
+                region_population,
+                max(min_country) AS min_country,
+                min_country_population,
+                max(max_country) AS max_country,
+                max_country_population
             FROM
             (SELECT region,
-                    sum(population) AS rp
-            FROM countries
-            GROUP BY region) t1
-            JOIN
-            (SELECT t1.region,
-                    t2.maxc,
-                    t2.maxp,
-                    t1.minc,
-                    t1.minp
+                    region_population,
+                    CASE
+                        WHEN population = min_country_population THEN country
+                    END AS min_country,
+                    min_country_population,
+                    CASE
+                        WHEN population = max_country_population THEN country
+                    END AS max_country,
+                    max_country_population
             FROM
                 (SELECT region,
-                        country AS minc,
-                        population AS minp
-                FROM countries a
-                WHERE population =
-                    (SELECT min(population)
-                    FROM countries b
-                    WHERE b.region = a.region)) t1
-            JOIN
-                (SELECT region,
-                        country AS maxc,
-                        population AS maxp
-                FROM countries c
-                WHERE population =
-                    (SELECT max(population)
-                    FROM countries d
-                    WHERE d.region = c.region)) t2 ON (t1.region = t2.region)) t2 ON (t1.region = t2.region);
+                        country,
+                        population,
+                        sum(population) OVER (PARTITION BY region) AS region_population,
+                                            min(population) OVER (PARTITION BY region) AS min_country_population,
+                                                                max(population) OVER (PARTITION BY region) AS max_country_population
+                FROM countries) t
+            WHERE min_country_population = population
+                OR population = t.max_country_population) t
+            GROUP BY (region,
+                    region_population,
+                    min_country_population,
+                    max_country_population);
         """
         return await cls.fetch(query)
