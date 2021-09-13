@@ -55,11 +55,10 @@ class Database:
                         country,
                         population,
                         sum(population) OVER (PARTITION BY region) AS region_population,
-                                            min(population) OVER (PARTITION BY region) AS min_country_population,
-                                                                max(population) OVER (PARTITION BY region) AS max_country_population
+                        min(population) OVER (PARTITION BY region) AS min_country_population,
+                        max(population) OVER (PARTITION BY region) AS max_country_population
                 FROM countries) t
-            WHERE min_country_population = population
-                OR population = t.max_country_population) t
+            WHERE min_country_population = population OR population = t.max_country_population) t
             GROUP BY (region,
                     region_population,
                     min_country_population,
